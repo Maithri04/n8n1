@@ -5,7 +5,9 @@ A full **Retrieval-Augmented Generation (RAG)** chatbot system that lets users u
 🔗 **Live Demo:** [https://sparkly-clafoutis-bc2a56.netlify.app/](https://sparkly-clafoutis-bc2a56.netlify.app/)
 
 ---
-
+![alt text](image.png)
+![alt text](<Screenshot 2026-06-12 143735.png>)
+![alt text](<Screenshot 2026-06-12 143759.png>)
 ## 📌 Overview
 
 DocBot allows users to:
