@@ -1,0 +1,11 @@
+# Environment variables
+.env
+*.env
+
+# API keys - never commit these!
+secrets.json
+credentials.json
+
+# OS files
+.DS_Store
+Thumbs.db
