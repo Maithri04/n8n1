@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocBot — Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124,106,247,0.12);
+      --accent-bright: #a89cfa;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --success: #4ade80;
+      --nav-h: 64px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(124,106,247,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    nav {
+      height: var(--nav-h);
+      flex-shrink: 0;
+      background: rgba(10,10,15,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      z-index: 100;
+      position: relative;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+    .nav-logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), #4f46e5); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .nav-link { padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.88rem; font-weight: 500; text-decoration: none; color: var(--muted); transition: all 0.15s; }
+    .nav-link:hover { color: var(--text); background: var(--border); }
+    .nav-link.active { color: var(--accent-bright); background: var(--accent-glow); }
+    .nav-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.75rem; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); border-radius: 99px; font-size: 0.75rem; color: var(--success); font-weight: 500; }
+    .nav-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .container { width: 100%; max-width: 560px; text-align: center; }
+
+    .chat-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 2rem;
+      box-shadow: 0 20px 40px rgba(124,106,247,0.3);
+    }
+
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2.5rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .open-chat-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+    }
+    .open-chat-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,106,247,0.4); }
+
+    .chat-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .how-it-works {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+    .how-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .how-emoji { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .how-text { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+    .how-text strong { color: var(--text); display: block; margin-bottom: 0.15rem; }
+
+    .upload-prompt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(124,106,247,0.08);
+      border: 1px solid rgba(124,106,247,0.2);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+    .upload-prompt-text { font-size: 0.88rem; color: var(--text); }
+    .upload-prompt-text span { color: var(--muted); display: block; font-size: 0.8rem; margin-top: 0.15rem; }
+    .upload-btn-sm {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      font-family: 'Space Grotesk', sans-serif;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .upload-btn-sm:hover { opacity: 0.85; }
+
+    footer { text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--muted); position: relative; z-index: 1; }
+    footer a { color: var(--accent-bright); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.7rem; }
+      nav { padding: 0 1rem; }
+      .nav-badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">🤖</div>
+      <span class="nav-logo-text">DocBot</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">📤 Upload</a>
+      <a class="nav-link active" href="chat.html">💬 Chat</a>
+    </div>
+    <div class="nav-badge">Live</div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="chat-icon">💬</div>
+      <h1>Chat with your documents</h1>
+      <p class="subtitle">Ask any question — DocBot searches your uploaded documents and answers using only what's in them.</p>
+
+      <div class="card">
+        <a class="open-chat-btn" href="https://maithri-2007.app.n8n.cloud/webhook/1228d592-f85b-408f-a8cb-9b4c84163873/chat" target="_blank">
+          💬 Open DocBot Chat →
+        </a>
+        <div class="chat-note">🔒 Opens securely in a new tab</div>
+
+        <div class="how-it-works">
+          <div class="how-item">
+            <span class="how-emoji">🔍</span>
+            <div class="how-text">
+              <strong>Searches your documents</strong>
+              Finds the most relevant chunks from everything you've uploaded
+            </div>
+          </div>
+          <div class="how-item">
+            <span class="how-emoji">🧠</span>
+            <div class="how-text">
+              <strong>Answers from your content only</strong>
+              Uses Groq AI to form answers — only from your documents, not the internet
+            </div>
+          </div>
+          <div class="how-item">
+            <span class="how-emoji">💾</span>
+            <div class="how-text">
+              <strong>Remembers your conversation</strong>
+              Context is maintained throughout your chat session
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-prompt">
+        <div class="upload-prompt-text">
+          Haven't uploaded a document yet?
+          <span>Upload one first so the chatbot has something to search</span>
+        </div>
+        <a class="upload-btn-sm" href="index.html">📤 Upload</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>Powered by n8n · Supabase · Gemini · <a href="https://github.com/Maithri04/n8n1" target="_blank">GitHub</a></footer>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocBot — Upload Documents</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124,106,247,0.12);
+      --accent-bright: #a89cfa;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --success: #4ade80;
+      --error: #f87171;
+      --nav-h: 64px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(124,106,247,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .nav-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .nav-link {
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .nav-link:hover { color: var(--text); background: var(--border); }
+    .nav-link.active {
+      color: var(--accent-bright);
+      background: var(--accent-glow);
+    }
+    .nav-cta {
+      padding: 0.45rem 1.1rem;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .container { width: 100%; max-width: 520px; }
+
+    .header { text-align: center; margin-bottom: 2.5rem; }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+    .subtitle { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+    /* STEPS */
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .step.active .step-num { background: var(--accent); color: #fff; }
+    .step.active { color: var(--accent-bright); }
+    .step-sep { color: var(--border); font-size: 0.9rem; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+    .drop-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 14px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .drop-title { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1rem; color: #fff; margin-bottom: 0.4rem; }
+    .drop-hint { font-size: 0.82rem; color: var(--muted); }
+    .drop-hint span { color: var(--accent-bright); }
+
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .file-preview.visible { display: flex; }
+    .file-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-size: 0.88rem; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-size { font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem; }
+    .file-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 0.2rem; transition: color 0.15s; flex-shrink: 0; }
+    .file-remove:hover { color: var(--error); }
+
+    .btn-upload {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-upload:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(124,106,247,0.35); }
+    .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .progress-wrap { display: none; margin-top: 1.25rem; }
+    .progress-wrap.visible { display: block; }
+    .progress-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+    .progress-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-bright)); border-radius: 99px; width: 0%; transition: width 0.4s ease; }
+
+    .status { display: none; margin-top: 1.25rem; padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.88rem; font-weight: 500; align-items: center; gap: 0.5rem; }
+    .status.visible { display: flex; }
+    .status.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--success); }
+    .status.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--error); }
+
+    .chat-cta {
+      display: none;
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.85rem;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: var(--success);
+      border-radius: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .chat-cta:hover { background: rgba(74,222,128,0.2); }
+    .chat-cta.visible { display: block; }
+
+    .formats { margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+    .format-tag { background: var(--border); color: var(--muted); font-size: 0.75rem; padding: 0.3rem 0.65rem; border-radius: 6px; font-weight: 500; }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    .spinner.visible { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--muted); position: relative; z-index: 1; }
+    footer a { color: var(--accent-bright); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.7rem; }
+      .card { padding: 1.5rem; }
+      nav { padding: 0 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">🤖</div>
+      <span class="nav-logo-text">DocBot</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html">📤 Upload</a>
+      <a class="nav-link" href="chat.html">💬 Chat</a>
+    </div>
+    <a class="nav-cta" href="chat.html">Open Chat →</a>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="header">
+        <h1>Upload your documents</h1>
+        <p class="subtitle">Drop a file and it gets embedded into the knowledge base instantly — then ask the chatbot anything about it.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step active">
+          <div class="step-num">1</div>
+          <span>Upload doc</span>
+        </div>
+        <span class="step-sep">→</span>
+        <div class="step">
+          <div class="step-num">2</div>
+          <span>Auto-embedded</span>
+        </div>
+        <span class="step-sep">→</span>
+        <div class="step">
+          <div class="step-num">3</div>
+          <span>Ask chatbot</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".txt,.pdf,.docx,.md"/>
+          <span class="drop-icon">📄</span>
+          <div class="drop-title">Drop your file here</div>
+          <div class="drop-hint">or <span>browse to upload</span> · max 10MB</div>
+        </div>
+
+        <div class="file-preview" id="filePreview">
+          <span class="file-icon" id="fileIcon">📄</span>
+          <div class="file-info">
+            <div class="file-name" id="fileName">document.pdf</div>
+            <div class="file-size" id="fileSize">—</div>
+          </div>
+          <button class="file-remove" id="removeFile">✕</button>
+        </div>
+
+        <button class="btn-upload" id="uploadBtn" disabled>
+          <div class="spinner" id="spinner"></div>
+          <span id="btnText">Select a file to upload</span>
+        </button>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label">
+            <span id="progressLabel">Uploading...</span>
+            <span id="progressPct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="status" id="statusMsg"></div>
+        <a class="chat-cta" id="chatCta" href="chat.html">💬 Document ready — open the chatbot →</a>
+
+        <div class="formats">
+          <span class="format-tag">.txt</span>
+          <span class="format-tag">.pdf</span>
+          <span class="format-tag">.docx</span>
+          <span class="format-tag">.md</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>Powered by n8n · Supabase · Gemini · <a href="https://github.com/Maithri04/n8n1" target="_blank">GitHub</a></footer>
+
+  <script>
+    const WEBHOOK_URL = 'https://maithri-2007.app.n8n.cloud/webhook/upload-document';
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileIcon = document.getElementById('fileIcon');
+    const removeFile = document.getElementById('removeFile');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressPct = document.getElementById('progressPct');
+    const progressLabel = document.getElementById('progressLabel');
+    const statusMsg = document.getElementById('statusMsg');
+    const chatCta = document.getElementById('chatCta');
+
+    const ICONS = { pdf: '📕', txt: '📄', docx: '📝', md: '📋' };
+
+    function formatBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+      return (b/1048576).toFixed(1) + ' MB';
+    }
+
+    function getExt(name) { return name.split('.').pop().toLowerCase(); }
+
+    function showFile(file) {
+      const ext = getExt(file.name);
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+      fileIcon.textContent = ICONS[ext] || '📄';
+      filePreview.classList.add('visible');
+      dropZone.style.display = 'none';
+      uploadBtn.disabled = false;
+      btnText.textContent = 'Upload & ingest document';
+      hideStatus();
+      chatCta.classList.remove('visible');
+    }
+
+    function clearFile() {
+      fileInput.value = '';
+      filePreview.classList.remove('visible');
+      dropZone.style.display = '';
+      uploadBtn.disabled = true;
+      btnText.textContent = 'Select a file to upload';
+      progressWrap.classList.remove('visible');
+      hideStatus();
+      chatCta.classList.remove('visible');
+    }
+
+    function hideStatus() { statusMsg.className = 'status'; statusMsg.textContent = ''; }
+
+    function showStatus(type, msg) {
+      statusMsg.className = `status ${type} visible`;
+      statusMsg.innerHTML = (type === 'success' ? '✅ ' : '❌ ') + msg;
+    }
+
+    function setProgress(pct, label) {
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+      progressLabel.textContent = label;
+    }
+
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) showFile(fileInput.files[0]); });
+    removeFile.addEventListener('click', clearFile);
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) showFile(e.dataTransfer.files[0]);
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!fileInput.files[0]) return;
+      uploadBtn.disabled = true;
+      spinner.classList.add('visible');
+      btnText.textContent = 'Uploading...';
+      progressWrap.classList.add('visible');
+      setProgress(10, 'Sending file...');
+      hideStatus();
+      chatCta.classList.remove('visible');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0], fileInput.files[0].name);
+        setProgress(40, 'Processing...');
+        const response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+        setProgress(90, 'Embedding into knowledge base...');
+        if (response.ok) {
+          setProgress(100, 'Done!');
+          showStatus('success', `"${fileInput.files[0].name}" added to the knowledge base!`);
+          chatCta.classList.add('visible');
+        } else {
+          throw new Error(response.status);
+        }
+      } catch {
+        showStatus('error', 'Upload failed. Make sure Workflow 3 is published in n8n.');
+        progressWrap.classList.remove('visible');
+      } finally {
+        spinner.classList.remove('visible');
+        btnText.textContent = 'Upload another document';
+        uploadBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
