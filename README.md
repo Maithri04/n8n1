@@ -1,110 +1,152 @@
-# 🤖 RAG Chatbot — n8n + Supabase + Google Drive
+# 🤖 DocBot — RAG Chatbot System
 
-A Retrieval-Augmented Generation (RAG) chatbot that automatically ingests documents and answers questions using only your document content.
+A full **Retrieval-Augmented Generation (RAG)** chatbot system that lets users upload documents and ask questions about them. Built entirely on a **free stack** using n8n, Supabase (pgvector), Google Gemini embeddings, and Groq LLM.
 
-## 🔗 Live Demo
-
-| | Link |
-|---|---|
-| 💬 **Chat with the bot** | [Open Chatbot](https://maithri-2007.app.n8n.cloud/webhook/1228d592-f85b-408f-a8cb-9b4c84163873/chat) |
-| 📤 **Upload documents** | [Upload Page](https://Maithri04.github.io/n8n1/upload.html) |
-
----
-<img width="1089" height="564" alt="Screenshot 2026-06-12 143659" src="https://github.com/user-attachments/assets/8ea9c7e3-0703-41cb-ac65-9c361a27bce2" />
-<img width="1729" height="763" alt="Screenshot 2026-06-12 143735" src="https://github.com/user-attachments/assets/b2fcfbd0-03be-402f-ba4a-7215b8d105d5" />
-<img width="1021" height="503" alt="Screenshot 2026-06-12 143759" src="https://github.com/user-attachments/assets/f78ecaa5-5285-48ad-b074-1d7996e83bbe" />
-
-## Architecture
-
-```
-📁 Google Drive (auto-ingest)        🌐 Upload Page (manual upload)
-        ↓                                      ↓
-Workflow 1: RAG Ingestion            Workflow 3: File Upload Webhook
-  - Google Drive Trigger               - Webhook (POST)
-  - Download File                      - Default Data Loader
-  - Default Data Loader                - Recursive Text Splitter
-  - Recursive Text Splitter            - Gemini Embeddings
-  - Gemini Embeddings                  - Supabase Vector Store
-  - Supabase Vector Store              - Respond to Webhook
-        ↓                                      ↓
-              Supabase (documents table — pgvector)
-                            ↑
-              Workflow 2: Chat Agent
-                - Chat Trigger
-                - AI Agent (Groq LLM)
-                - Simple Memory
-                - Supabase Vector Store (retrieve as tool)
-                - Gemini Embeddings
-                            ↓
-                      💬 Chat Response
-```
+🔗 **Live Demo:** [https://sparkly-clafoutis-bc2a56.netlify.app/](https://sparkly-clafoutis-bc2a56.netlify.app/)
 
 ---
 
-## Tech Stack
+## 📌 Overview
 
-| Component | Tool |
-|-----------|------|
-| Workflow Automation | [n8n](https://n8n.io) |
-| Vector Database | [Supabase](https://supabase.com) (pgvector) |
-| Embeddings | Google Gemini (`gemini-embedding-2`) |
+DocBot allows users to:
+- Upload documents (via a web page or Google Drive)
+- Automatically chunk, embed, and store document content in a vector database
+- Ask natural-language questions and receive AI-generated answers based **only** on the uploaded document content
+
+---
+
+## 🏗️ Architecture
+
+The system is built around **3 n8n workflows**, a **Supabase vector database**, and a **static HTML/CSS/JS frontend**.
+
+### Workflow 1 — RAG Ingestion (Auto)
+- Watches a **Google Drive** folder every hour
+- When a new file is added:
+  1. Downloads the file
+  2. Splits it into chunks
+  3. Embeds chunks using **Google Gemini**
+  4. Stores embeddings in **Supabase**
+
+### Workflow 2 — Chat Agent
+- Receives a user's message
+- AI Agent searches **Supabase** for relevant document chunks using vector similarity search
+- **Groq LLM** generates an answer using **only** the retrieved document content
+- Returns the response to the user
+
+### Workflow 3 — File Upload Webhook
+- Receives files uploaded via the web frontend
+- Processes and chunks the file
+- Embeds content using Google Gemini
+- Stores embeddings in Supabase
+- Returns a success message to the frontend
+
+---
+
+## 🗄️ Database (Supabase)
+
+- **`documents` table** — stores document chunks with `vector(3072)` embeddings
+- **`match_documents()`** — Postgres function for vector similarity search
+- **pgvector extension** — enables efficient vector operations in PostgreSQL
+
+Schema definition is available in [`schema.sql`](./schema.sql).
+
+---
+
+## 🖥️ Frontend
+
+A simple, lightweight static frontend (HTML/CSS/JS):
+
+| Page | Description |
+|------|-------------|
+| `index.html` | Landing page |
+| `upload.html` | Upload page with drag & drop, progress bar, and success message |
+| `chat.html` | Chat interface connected to the n8n chatbot workflow |
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer | Tool |
+|-------|------|
+| Workflows | [n8n Cloud](https://n8n.io/) |
+| Vector DB | [Supabase](https://supabase.com/) (pgvector) |
+| Embeddings | Google Gemini (`gemini-embedding-2`, 3072D) |
 | LLM | Groq (`qwen/qwen3-32b`) |
 | Document Source | Google Drive + Upload Page |
-| Frontend | Vanilla HTML/CSS/JS |
+| Frontend | HTML / CSS / JavaScript |
+| Hosting | Netlify |
+| Code Repository | GitHub ([Maithri04/n8n1](https://github.com/Maithri04/n8n1)) |
 
 ---
 
-## Workflows
+## 🔗 Links
 
-| Workflow | Description |
-|----------|-------------|
-| `rag_ingestion.json` | Auto-ingests files from Google Drive |
-| `chat_workflow.json` | Chat agent that answers from knowledge base |
-| `file_upload_webhook.json` | Webhook to receive uploaded files from the web page |
-
----
-
-## Setup Instructions
-
-### 1. Supabase Setup
-- Create a new Supabase project
-- Go to **SQL Editor** and run `schema.sql`
-
-### 2. API Keys Required
-
-| Service | Where to get |
-|---------|-------------|
-| Groq API Key | [console.groq.com](https://console.groq.com) |
-| Google Gemini API Key | [aistudio.google.com](https://aistudio.google.com) |
-| Supabase URL + Key | Your Supabase project settings |
-| Google Drive OAuth2 | Google Cloud Console |
-
-### 3. n8n Setup
-- Install [n8n](https://docs.n8n.io/hosting/) or use [n8n Cloud](https://app.n8n.io)
-- Import all 3 workflow JSON files from the `workflows/` folder
-- Add credentials for Google Drive, Supabase, Groq, and Gemini
-- Publish all 3 workflows
-
-### 4. Upload Page
-- Deploy `upload.html` to GitHub Pages or any static host
-- Update the `WEBHOOK_URL` in `upload.html` to your own n8n webhook URL
-
-### 5. Usage
-1. Upload `.txt`, `.pdf`, or `.docx` files via the upload page
-2. Files are automatically embedded into the knowledge base
-3. Open the chatbot and ask questions about your documents!
+| Resource | URL |
+|----------|-----|
+| 🌐 Live Demo | [sparkly-clafoutis-bc2a56.netlify.app](https://sparkly-clafoutis-bc2a56.netlify.app/) |
+| 💬 Chatbot Webhook | `https://maithri-2007.app.n8n.cloud/webhook/.../chat` |
+| 📤 Upload Webhook | `https://maithri-2007.app.n8n.cloud/webhook/upload-document` |
+| 🐙 GitHub Repo | [github.com/Maithri04/n8n1](https://github.com/Maithri04/n8n1) |
 
 ---
 
-## Supported Document Formats
-- `.txt` ✅
-- `.pdf` ✅
-- `.docx` ✅
-- `.md` ✅
+## 📁 Project Structure
+
+```
+rag-chatbot-n8n/
+├── workflows/
+│   ├── rag_ingestion.json        # Workflow 1 - Google Drive ingestion
+│   ├── chat_workflow.json        # Workflow 2 - Chat agent
+│   └── file_upload_webhook.json  # Workflow 3 - Upload webhook
+├── index.html                    # Landing page
+├── chat.html                     # Chat interface
+├── upload.html                   # File upload page
+├── schema.sql                    # Supabase table + match_documents() function
+├── .gitignore
+└── README.md
+```
 
 ---
 
-## Notes
-- Gemini `gemini-embedding-2` produces **3072-dimensional** vectors
-- Simple Memory stores chat history in n8n (not persistent across restarts). For production, use Postgres or Redis memory
-- n8n free tier allows 1000 executions/month
+## 🚀 Deployment
+
+The frontend is deployed on **Netlify**, directly from GitHub.
+
+### Steps:
+1. Connect the GitHub repo (`Maithri04/n8n1`) to Netlify
+2. Set **Publish directory** to `rag-chatbot-n8n`
+3. No build command required (static HTML/CSS/JS)
+4. Deploy — Netlify auto-redeploys on every push to `main`
+
+---
+
+## 🧠 How It Works (End-to-End Flow)
+
+1. **Upload** — User uploads a document via `upload.html`
+2. **Process** — Workflow 3 chunks the document and generates embeddings via Gemini
+3. **Store** — Embeddings + text chunks are stored in Supabase (`documents` table)
+4. **Query** — User asks a question in `chat.html`
+5. **Retrieve** — Workflow 2 uses `match_documents()` to find relevant chunks via vector similarity
+6. **Answer** — Groq LLM generates a response grounded in the retrieved document content
+7. **Display** — Answer is returned and shown in the chat interface
+
+---
+
+## 📋 Roadmap / Pending
+
+- [ ] Custom domain setup
+- [ ] Store raw uploaded files in Supabase Storage (currently only chunks/embeddings are persisted)
+- [ ] Improve error handling on upload failures
+- [ ] Add support for more file types (currently optimized for text-based docs)
+
+---
+
+## 📄 License
+
+This project is open-source and available for educational/portfolio purposes.
+
+---
+
+## 🙋 Author
+
+Built by **Maithri** as a portfolio project demonstrating practical RAG, vector search, and AI agent workflow skills using a fully free tech stack.
